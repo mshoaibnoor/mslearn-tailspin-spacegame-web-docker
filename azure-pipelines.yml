@@ -2,89 +2,49 @@ trigger:
 - '*'
 
 variables:
-  buildConfiguration: 'Release'
-
+  tag: '$(Build.BuildId)'
+  containerRegistry: 'devdotnetreg'
+  repository: 'dotnet'
+  ResourceGroup: 'devops-rg'
+pool:
+     vmImage: 'windows-latest'
 stages:
-- stage: 'Build'
-  displayName: 'Build the web application'
-  jobs: 
-  - job: 'Build'
-    displayName: 'Build job'
-    pool:
-      vmImage: 'ubuntu-20.04'
-      demands:
-      - npm
-
-    variables:
-      wwwrootDir: 'Tailspin.SpaceGame.Web/wwwroot'
-      dotnetSdkVersion: '5.x'
-
+- stage: Build
+  displayName: Build and push stage
+  jobs:
+  - job: DotNet 
+    displayName: DotNet Build and Test   
     steps:
-    - task: UseDotNet@2
-      displayName: 'Use .NET SDK $(dotnetSdkVersion)'
-      inputs:
-        version: '$(dotnetSdkVersion)'
-
-    - task: Npm@1
-      displayName: 'Run npm install'
-      inputs:
-        verbose: false
-
-    - script: './node_modules/.bin/node-sass $(wwwrootDir) --output $(wwwrootDir)'
-      displayName: 'Compile Sass assets'
-
-    - task: gulp@1
-      displayName: 'Run gulp tasks'
-
-    - script: 'echo "$(Build.DefinitionName), $(Build.BuildId), $(Build.BuildNumber)" > buildinfo.txt'
-      displayName: 'Write build info'
-      workingDirectory: $(wwwrootDir)
-
     - task: DotNetCoreCLI@2
-      displayName: 'Restore project dependencies'
       inputs:
         command: 'restore'
-        projects: '**/*.csproj'
-
+        projects: 'Tailspin.SpaceGame.Web/Tailspin.SpaceGame.Web.csproj'
+        feedsToUse: 'select'
     - task: DotNetCoreCLI@2
-      displayName: 'Build the project - $(buildConfiguration)'
       inputs:
         command: 'build'
-        arguments: '--no-restore --configuration $(buildConfiguration)'
-        projects: '**/*.csproj'
-
+        projects: 'Tailspin.SpaceGame.Web/Tailspin.SpaceGame.Web.csproj'
+        arguments: '-c Release -o $(Build.SourcesDirectory)/app/build'
+        zipAfterPublish: true
     - task: DotNetCoreCLI@2
-      displayName: 'Publish the project - $(buildConfiguration)'
+      inputs:
+        command: 'test'
+        projects: 'Tailspin.SpaceGame.Web/*.csproj'
+    - task: DotNetCoreCLI@2
       inputs:
         command: 'publish'
-        projects: '**/*.csproj'
-        publishWebProjects: false
-        arguments: '--no-build --configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)/$(buildConfiguration)'
+        publishWebProjects: true
+        arguments: '-c Release -o $(Build.SourcesDirectory)/app/publish'
         zipAfterPublish: true
-
-    - publish: '$(Build.ArtifactStagingDirectory)'
-      artifact: drop
-
-- stage: 'Deploy'
-  displayName: 'Deploy the web application'
-  dependsOn: Build
-  jobs:
-  - deployment: Deploy
-    pool:
-      vmImage: 'ubuntu-20.04'
-    environment: spike
-    variables:
-    - group: Release
-    strategy:
-      runOnce:
-        deploy:
-          steps:
-          - download: current
-            artifact: drop
-          - task: AzureWebApp@1
-            displayName: 'Azure App Service Deploy: website'
-            inputs:
-              azureSubscription: 'Resource Manager - Tailspin - Space Game'
-              appName: '$(WebAppName)'
-              appType: webAppLinux
-              package: '$(Pipeline.Workspace)/drop/$(buildConfiguration)/Tailspin.SpaceGame.Web.zip'
+    
+  - job: Docker
+    displayName: Build And Push Docker job 
+    steps:
+    - task: Docker@2
+      displayName: Build and push an image to container registry
+      inputs:
+        containerRegistry: $(containerRegistry)
+        repository: $(repository)
+        command: 'buildAndPush'
+        Dockerfile: '**/Dockerfile'
+        tags: $(tag)
