@@ -38,6 +38,7 @@ stages:
         zipAfterPublish: true
     
   - job: Docker
+    dependsOn: DotNet
     displayName: Build And Push Docker job 
     steps:
     - task: Docker@2
