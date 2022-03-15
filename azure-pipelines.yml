@@ -34,8 +34,8 @@ stages:
       inputs:
         command: 'publish'
         publishWebProjects: true
-        arguments: '-c Release -o $(Build.SourcesDirectory)/app/publish'
-        zipAfterPublish: true
+        arguments: '-c Release -o $(Build.SourcesDirectory)/Tailspin.SpaceGame.Web/After/publish'
+        zipAfterPublish: false
     
   # - job: Docker
   #   dependsOn: DotNet
@@ -47,5 +47,5 @@ stages:
         containerRegistry: $(containerRegistry)
         repository: $(repository)
         command: 'buildAndPush'
-        Dockerfile: '**/Dockerfile'
+        Dockerfile: '$(Build.SourcesDirectory)/Dockerfile'
         tags: $(tag)
