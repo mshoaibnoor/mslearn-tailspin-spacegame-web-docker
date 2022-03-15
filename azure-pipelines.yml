@@ -6,8 +6,9 @@ variables:
   containerRegistry: 'devacr-sc'
   repository: 'dotnet'
   ResourceGroup: 'devops-rg'
+  dotnetSdkVersion: '5.x'
 pool:
-     vmImage: 'windows-latest'
+     vmImage: 'ubuntu-latest'
 stages:
 - stage: Build
   displayName: Build and push stage
@@ -15,6 +16,10 @@ stages:
   - job: DotNet 
     displayName: DotNet Build and Test   
     steps:
+    - task: UseDotNet@2
+      displayName: 'Use .NET SDK $(dotnetSdkVersion)'
+      inputs:
+        version: '$(dotnetSdkVersion)'
     - task: DotNetCoreCLI@2
       inputs:
         command: 'restore'
