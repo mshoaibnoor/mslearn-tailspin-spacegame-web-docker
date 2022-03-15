@@ -34,7 +34,11 @@ stages:
       inputs:
         command: 'publish'
         publishWebProjects: true
+<<<<<<< HEAD
         arguments: '-c Release -o $(Build.SourcesDirectory)/Tailspin.SpaceGame.Web/After/publish'
+=======
+        arguments: '-c Release -o $(Build.SourcesDirectory)/app/publish'
+>>>>>>> 2df90a3ec1774be510d1f7b17771aea3c5dc8f27
         zipAfterPublish: false
     
   # - job: Docker
