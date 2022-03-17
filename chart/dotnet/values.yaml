@@ -5,7 +5,7 @@
 replicaCount: 1
 
 image:
-  repository: devacr-sc.azurecr.io/dotnet
+  repository: devdotnetreg.azurecr.io/dotnet
   tag: latest
   pullPolicy: Always
 
