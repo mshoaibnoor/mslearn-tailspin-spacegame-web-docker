@@ -37,6 +37,12 @@ spec:
             - name: http
               containerPort: 80
               protocol: TCP
+            - name: https
+              containerPort: 443
+              protocol: TCP
+            - name: app
+              containerPort: 5000
+              protocol: TCP
           livenessProbe:
             httpGet:
               path: /
